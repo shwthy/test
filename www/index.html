@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Jetpack Arena</title>
+<style>
+html,body{margin:0;height:100%;background:#0b1020;color:#fff;font-family:system-ui,Roboto,sans-serif;overflow:hidden}
+#ui{height:100%;display:flex;align-items:center;justify-content:center;gap:28px;padding:16px;box-sizing:border-box}
+.col{width:min(300px,44vw)}h1{margin:0 0 14px;font-size:26px;letter-spacing:3px;text-align:center;width:100%}
+button,input{width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #334155;font-size:16px;background:#0f172a;color:#fff}
+button{background:#2563eb;border:0;font-weight:700;margin-top:8px}input{margin-top:8px}
+small{display:block;color:#94a3b8;margin-top:8px;min-height:16px}
+#addr{font-size:17px;font-weight:700;color:#93c5fd;margin:8px 0;line-height:1.5}
+#f{display:none;position:fixed;inset:0;width:100%;height:100%;border:0;background:#0b1020}
+.t{display:flex;flex-direction:column;align-items:center}
+</style></head><body>
+<div id="ui"><div class="t" style="flex-direction:column"><h1>JETPACK ARENA</h1>
+<div style="display:flex;gap:28px;align-items:flex-start">
+<div class="col"><button id="host">HOST GAME</button><small id="msg">You run the server on this phone.</small>
+<div id="hostbox" style="display:none"><small>Friends join this address (same hotspot / Wi-Fi):</small><div id="addr"></div><small id="hint"></small><button id="start">START PLAYING</button></div></div>
+<div class="col"><input id="ip" placeholder="Host address, e.g. 192.168.43.1" inputmode="decimal"><button id="join">JOIN GAME</button><small>Enter the address shown on the host's phone.</small></div>
+</div></div></div>
+<iframe id="f" allow="fullscreen; autoplay"></iframe>
+<script>
+const $ = (id) => document.getElementById(id);
+function play(url) {
+  try { navigator.wakeLock && navigator.wakeLock.request('screen'); } catch (e) {}
+  $('f').src = url; $('f').style.display = 'block'; $('ui').style.display = 'none';
+}
+$('host').onclick = async () => {
+  $('msg').textContent = 'Starting server...';
+  for (let i = 0; i < 40; i++) {
+    try {
+      const d = await (await fetch('http://localhost:3000/info')).json();
+      const ips = d.ips.length ? d.ips : ['192.168.43.1'];
+      $('msg').textContent = 'Server running.'; $('hostbox').style.display = 'block';
+      $('addr').innerHTML = ips.map((ip) => ip + ':3000').join('<br>');
+      $('hint').textContent = d.ips.length ? '' : "Couldn't detect the IP. Hotspot phones are often 192.168.43.1 - check Wi-Fi/hotspot details.";
+      return;
+    } catch (e) { await new Promise((r) => setTimeout(r, 500)); }
+  }
+  $('msg').textContent = 'Server did not start. Close and reopen the app.';
+};
+$('start').onclick = () => play('http://localhost:3000/');
+$('ip').value = localStorage.getItem('addr') || '';
+$('join').onclick = () => {
+  let a = $('ip').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, ''); if (!a) return;
+  if (!a.includes(':')) a += ':3000'; localStorage.setItem('addr', a); play('http://' + a + '/');
+};
+</script></body></html>
