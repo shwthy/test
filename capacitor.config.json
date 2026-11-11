@@ -1,0 +1,7 @@
+{
+  "appId": "com.jetpackarena.app",
+  "appName": "Jetpack Arena",
+  "webDir": "www",
+  "server": { "androidScheme": "http", "cleartext": true },
+  "plugins": { "CapacitorNodeJS": { "nodeDir": "nodejs", "startMode": "auto" } }
+}
